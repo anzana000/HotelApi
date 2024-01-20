@@ -22,7 +22,7 @@ namespace HotelApi.Controllers
             return Ok(availableRooms);
         }
 
-        [HttpPost]
+        [HttpPost("book")]
         public async Task<IActionResult> BookRoom(int roomId, int userId, DateTime checkInDate, DateTime checkOutDate)
         {
             var room = await _context.Rooms.FindAsync(roomId);
@@ -58,6 +58,53 @@ namespace HotelApi.Controllers
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = room.Id }, room);
         }
+
+        [HttpGet("{roomId}/invoice")]
+        public async Task<IActionResult> GetInvoice(int roomId)
+        {
+            try
+            {
+                // Fetch room and user data in a single query
+                var room = await _context.Rooms
+                    .Include(r => r.User)
+                    .SingleOrDefaultAsync(r => r.Id == roomId);
+
+                if (room == null || room.UserId == null)
+                {
+                    return NotFound("Room not found or not booked");
+                }
+
+                var user = room.User;
+
+                // Calculate total cost with optional discount
+                decimal totalCost = room.Price * (room.CheckOutDate.Value - room.CheckInDate.Value).Days;
+                if (room.UserId.Value >= 3) // Apply 5% discount for 3 or more rooms booked by the same user
+                {
+                    
+                    totalCost = totalCost * 0.95M;
+                    
+                }
+
+                // Create invoice data
+                var invoiceData = new
+                {
+                    CustomerName = user.Name,
+                    RoomType = room.RoomType.ToString(),
+                    CheckInDate = room.CheckInDate.Value,
+                    CheckOutDate = room.CheckOutDate.Value,
+                    TotalCost = totalCost
+                };
+
+                return Ok(invoiceData);
+            }
+            catch (Exception ex)
+            {
+                // Handle potential exceptions gracefully
+                return StatusCode(500, "Error retrieving invoice: " + ex.Message);
+            }
+        }
+
+
 
     }
 }
