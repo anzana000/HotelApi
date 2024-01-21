@@ -2,7 +2,7 @@
 {
     public class Room
     {
-        public int Id { get; set; };
+        public int Id { get; set; }
         public RoomType RoomType { get; set; }
         public decimal Price { get; set; }
         public bool IsAvailable { get; set; }
