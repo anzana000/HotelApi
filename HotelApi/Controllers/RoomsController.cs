@@ -1,5 +1,6 @@
 ﻿using HotelApi.Data;
 using HotelApi.Models;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ namespace HotelApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    
     public class RoomsController : ControllerBase
     {
         private readonly HotelDbContext _context;
@@ -41,7 +43,7 @@ namespace HotelApi.Controllers
             return Ok("Room booked successfully");
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{Id}")]
         [ProducesResponseType(typeof(Room),StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int Id)
@@ -82,8 +84,9 @@ namespace HotelApi.Controllers
                 {
                     
                     totalCost = totalCost * 0.95M;
-                    
+
                 }
+                
 
                 // Create invoice data
                 var invoiceData = new

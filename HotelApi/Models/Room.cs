@@ -9,14 +9,16 @@
         public DateTime? CheckInDate { get; set; }
         public DateTime? CheckOutDate { get; set; }
         public int? UserId { get; set; }
-        public User User { get; set; }
+        public User? user { get; set; }
+
+
 
     }
 
     public enum RoomType
     {
-        Single,
-        Double,
-        Suit
+        Single =0,
+        Double=1,
+        Suit=2
     }
 }
