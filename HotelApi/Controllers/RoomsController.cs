@@ -16,10 +16,10 @@ namespace HotelApi.Controllers
         public RoomsController(HotelDbContext context) => _context = context;
 
         [HttpGet]
-        public async Task<IActionResult> GetAvailableRooms(RoomType roomType, DateTime checkInDate, DateTime checkOutDate)
+        public async Task<IActionResult> GetAvailableRooms(RoomType roomType, DateTime date)
         {
             var availableRooms = await _context.Rooms
-                .Where(r => r.RoomType == roomType && r.IsAvailable && !r.CheckInDate.HasValue && !r.CheckOutDate.HasValue)
+                .Where(r => r.RoomType == roomType && r.IsAvailable && date>r.CheckOutDate&&date<r.CheckInDate)
                 .ToListAsync();
             return Ok(availableRooms);
         }
