@@ -9,7 +9,7 @@
         public DateTime? CheckInDate { get; set; }
         public DateTime? CheckOutDate { get; set; }
         public int? UserId { get; set; }
-        public User? user { get; set; }
+        public User? User { get; set; }
 
 
 
