@@ -19,7 +19,7 @@ namespace HotelApi.Controllers
         public async Task<IActionResult> GetAvailableRooms(RoomType roomType, DateTime date)
         {
             var availableRooms = await _context.Rooms
-                .Where(r => r.RoomType == roomType && r.IsAvailable && date>r.CheckOutDate&&date<r.CheckInDate)
+                .Where(r => r.RoomType == roomType && r.IsAvailable && date>r.CheckOutDate)
                 .ToListAsync();
             return Ok(availableRooms);
         }
