@@ -1,4 +1,5 @@
 ﻿using HotelApi.Data;
+using HotelApi.Data.DTOs;
 using HotelApi.Models;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
@@ -25,9 +26,9 @@ namespace HotelApi.Controllers
         }
 
         [HttpPost("book")]
-        public async Task<IActionResult> BookRoom(int roomId, int userId, DateTime checkInDate, DateTime checkOutDate)
+        public async Task<IActionResult> BookRoom(BookRoomDTO obj)
         {
-            var room = await _context.Rooms.FindAsync(roomId);
+            var room = await _context.Rooms.FindAsync(obj.RoomId);
             if (room == null || !room.IsAvailable)
             {
                 return BadRequest("Room not found or not available");
@@ -35,9 +36,9 @@ namespace HotelApi.Controllers
 
             // Update room availability and booking details
             room.IsAvailable = false;
-            room.CheckInDate = checkInDate;
-            room.CheckOutDate = checkOutDate;
-            room.UserId = userId;
+            room.CheckInDate = obj.CheckInDate;
+            room.CheckOutDate = obj.CheckOutDate;
+            room.UserId = obj.UserId;
 
             await _context.SaveChangesAsync();
             return Ok("Room booked successfully");
