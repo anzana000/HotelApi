@@ -20,25 +20,26 @@ namespace HotelApi.Controllers
         public async Task<IActionResult> GetAvailableRooms(RoomType roomType, DateTime date)
         {
             var availableRooms = await _context.Rooms
-                .Where(r => r.RoomType == roomType && r.IsAvailable && date>r.CheckOutDate)
+                .Where(r => r.RoomType == roomType && (
+                (r.CheckInDate==null&&r.CheckOutDate==null) || (date<r.CheckInDate||date>r.CheckOutDate)))
                 .ToListAsync();
             return Ok(availableRooms);
         }
 
         [HttpPost("book")]
-        public async Task<IActionResult> BookRoom(BookRoomDTO obj)
+        public async Task<IActionResult> BookRoom([FromBody] int roomId,int userId,DateTime checkInDate,int days)
         {
-            var room = await _context.Rooms.FindAsync(obj.RoomId);
-            if (room == null || !room.IsAvailable)
+            var room = await _context.Rooms.FindAsync(roomId);
+            if (room == null)
             {
                 return BadRequest("Room not found or not available");
             }
 
             // Update room availability and booking details
-            room.IsAvailable = false;
-            room.CheckInDate = obj.CheckInDate;
-            room.CheckOutDate = obj.CheckOutDate;
-            room.UserId = obj.UserId;
+         
+            room.CheckInDate = checkInDate;
+            room.CheckOutDate = checkInDate.AddDays(days);
+            room.UserId = userId;
 
             await _context.SaveChangesAsync();
             return Ok("Room booked successfully");
