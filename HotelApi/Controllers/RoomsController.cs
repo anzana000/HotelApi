@@ -27,9 +27,9 @@ namespace HotelApi.Controllers
         }
 
         [HttpPost("book")]
-        public async Task<IActionResult> BookRoom([FromBody] int roomId,int userId,DateTime checkInDate,int days)
+        public async Task<IActionResult> BookRoom([FromBody] BookRoomDTO obj)
         {
-            var room = await _context.Rooms.FindAsync(roomId);
+            var room = await _context.Rooms.FindAsync(obj.RoomId);
             if (room == null)
             {
                 return BadRequest("Room not found or not available");
@@ -37,9 +37,9 @@ namespace HotelApi.Controllers
 
             // Update room availability and booking details
          
-            room.CheckInDate = checkInDate;
-            room.CheckOutDate = checkInDate.AddDays(days);
-            room.UserId = userId;
+            room.CheckInDate = obj.CheckInDate;
+            room.CheckOutDate = obj.CheckInDate.AddDays(obj.Days);
+            room.UserId = obj.UserId;
 
             await _context.SaveChangesAsync();
             return Ok("Room booked successfully");
@@ -63,41 +63,53 @@ namespace HotelApi.Controllers
             return CreatedAtAction(nameof(GetById), new { id = room.Id }, room);
         }
 
-        [HttpGet("{roomId}/invoice")]
-        public async Task<IActionResult> GetInvoice(int roomId)
+        [HttpGet("{userId}/invoice")]
+        public async Task<IActionResult> GetInvoice(int userId)
         {
             try
             {
                 // Fetch room and user data in a single query
-                var room = await _context.Rooms
-                    .Include(r => r.User)
-                    .SingleOrDefaultAsync(r => r.Id == roomId);
+              var room = await _context.Rooms
+                     .Where(r => r.UserId == userId)
+                     .ToListAsync();
 
-                if (room == null || room.UserId == null)
+                
+                if (room == null)
                 {
                     return NotFound("Room not found or not booked");
                 }
 
-                var user = room.User;
+                var user = await _context.Users.FindAsync(userId);
 
                 // Calculate total cost with optional discount
-                decimal totalCost = room.Price * (room.CheckOutDate.Value - room.CheckInDate.Value).Days;
-                if (room.UserId.Value >= 3) // Apply 5% discount for 3 or more rooms booked by the same user
+                //decimal totalCost =  room.Price * (room.CheckOutDate.Value - room.CheckInDate.Value).Days;
+                decimal gross = 0;
+               
+                decimal discount=0;
+                foreach(var r in room)
                 {
+                    decimal totalCost = r.Price * (r.CheckOutDate.Value - r.CheckInDate.Value).Days;
+                    gross += totalCost;
+                }
+                if (room.Count >= 3) // Apply 5% discount for 3 or more rooms booked by the same user
+                {
+
+                    discount = gross * 0.05M;
                     
-                    totalCost = totalCost * 0.95M;
 
                 }
-                
+
 
                 // Create invoice data
                 var invoiceData = new
                 {
                     CustomerName = user.Name,
-                    RoomType = room.RoomType.ToString(),
-                    CheckInDate = room.CheckInDate.Value,
-                    CheckOutDate = room.CheckOutDate.Value,
-                    TotalCost = totalCost
+                    BookingDetails =room,
+                    TotalRooms = room.Count,
+                    GrossAmount = gross,
+                    Discount = discount,
+                   NetAmount = gross - discount
+                   
                 };
 
                 return Ok(invoiceData);
